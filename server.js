@@ -1,6 +1,7 @@
 import { configDotenv } from "dotenv";
 import fastifySensible from "@fastify/sensible";
 import Fastify from "fastify";
+import fastifyJwt from "@fastify/jwt";
 
 configDotenv({ path: ".env" });
 
@@ -8,9 +9,15 @@ const fastify = Fastify({
   logger: true,
 });
 
+fastify.register(fastifyJwt, {
+  secret: process.env.JWT_SECRET,
+});
+
 fastify.register(fastifySensible);
 
 fastify.register(import("./plugins/mongodb.js"));
+
+fastify.register(import("./routes/auth.js"), { prefix: "/api/auth" });
 
 fastify.get("/", function (request, reply) {
   reply.send({ hello: "world" });
@@ -57,7 +64,6 @@ const start = async () => {
     );
   } catch (err) {
     fastify.log.error(err);
-    throw fastify.httpErrors.notFound("The requested item could not be found");
     process.exit(1);
   }
 };
